@@ -8,16 +8,21 @@ public class Player
 	private DiscordUser discordUser;
 	private String auName;
 	private boolean isDead;
+	private boolean isExiled;
 
-	public Player(PlayerColor color, String auName, boolean isDead)
+	public Player(PlayerColor color, String auName, boolean isDead, boolean isExiled)
 	{
 		this.color = color;
 		this.auName = auName;
 		this.isDead = isDead;
+		this.isExiled = isExiled;
 	}
 
 	public PlayerColor getColor()
 	{
+		if(color == null)
+			System.out.println(69);
+		
 		return color;
 	}
 
@@ -54,5 +59,16 @@ public class Player
 	public void setDiscordUser(DiscordUser discordUser)
 	{
 		this.discordUser = discordUser;
+	}
+
+	public boolean isExiled()
+	{
+		return isExiled;
+	}
+
+	public void exile()
+	{
+		isExiled = true;
+		isDead = true;
 	}
 }

@@ -1,6 +1,7 @@
 package me.kolpa.aubot.lib.core.model;
 
 import me.kolpa.aubot.lib.core.model.enums.GameState;
+import me.kolpa.aubot.lib.core.model.enums.PlayerColor;
 import me.kolpa.aubot.lib.core.model.enums.Region;
 
 import java.util.ArrayList;
@@ -10,24 +11,24 @@ public class Game
 {
 	private int gameId;
 	private DiscordUser host;
-	
+
 	private String discordMessageId;
 	private String discordChannelId;
-	
-	
+
+
 	private GameState gameState;
 	private Region region;
 	private String captureCode;
 	private String roomCode;
 	private final List<Player> players = new ArrayList<Player>();
-	
+
 	public Game(String captureCode)
 	{
 		this.captureCode = captureCode;
 		this.region = null;
 		this.roomCode = null;
 	}
-	
+
 	public void setClientConnected(Region region, String roomCode)
 	{
 		this.region = region;
@@ -38,7 +39,7 @@ public class Game
 	public void setGameState(GameState gameState)
 	{
 		this.gameState = gameState;
-		
+
 		switch (gameState)
 		{
 			case Menu:
@@ -47,13 +48,40 @@ public class Game
 		}
 	}
 	
+	public Player getPlayer(String name)
+	{
+		for (Player player : players)
+			if (player.getAuName().equals(name))
+				return player;
+
+		return null;
+	}
+
+	public boolean hasPlayer(String name)
+	{
+		return getPlayer(name) != null;
+	}
+	
+	public void addPlayer(Player player)
+	{
+		if(gameState == GameState.Menu)
+			return;;
+		
+		players.add(player);
+	}
+
+	public void removePlayer(String name)
+	{
+		players.removeIf(player -> player.getAuName().equals(name));
+	}
+
 	public void endGame()
 	{
 		region = null;
 		roomCode = null;
 		players.clear();
 	}
-	
+
 	public GameState getGameState()
 	{
 		return gameState;

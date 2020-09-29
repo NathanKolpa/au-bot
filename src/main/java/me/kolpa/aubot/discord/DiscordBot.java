@@ -2,6 +2,7 @@ package me.kolpa.aubot.discord;
 
 import me.kolpa.aubot.lib.core.model.DiscordUser;
 import me.kolpa.aubot.lib.core.model.Game;
+import me.kolpa.aubot.lib.core.model.Player;
 import me.kolpa.aubot.lib.core.repository.UnitOfWork;
 import me.kolpa.aubot.lib.core.repository.UnitOfWorkFactory;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -13,6 +14,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class DiscordBot extends ListenerAdapter
@@ -27,7 +29,7 @@ public class DiscordBot extends ListenerAdapter
 
 	public void init() throws LoginException
 	{
-		JDABuilder builder = JDABuilder.createDefault("NzYwNTY1MzY4NTI3Mzg4Njcz.X3N5sg.b83pS7lzJuAL9_GMZ27OPOYDv4k");
+		JDABuilder builder = JDABuilder.createDefault("NzYwNTY1MzY4NTI3Mzg4Njcz.X3N5sg.1GvN_4PzuHI7yB9NwGanrZlVq5Y");
 
 		jda = builder.build();
 		jda.addEventListener(this);
@@ -54,8 +56,9 @@ public class DiscordBot extends ListenerAdapter
 	{
 		UnitOfWork unitOfWork = unitOfWorkFactory.create();
 
+		unitOfWork.getGames().deleteGamesWithDiscordId(event.getAuthor().getId());
+		
 		Game game = new Game(UUID.randomUUID().toString());
-		unitOfWork.getGames().add(game);
 
 		event.getAuthor()
 				.openPrivateChannel()
@@ -65,10 +68,11 @@ public class DiscordBot extends ListenerAdapter
 				{
 					game.setDiscordMessageId(x.getId());
 					game.setDiscordChannelId(x.getChannel().getId());
-					game.setHost(new DiscordUser(event.getAuthor().getName(), event.getAuthor().getId()));
+					game.setHost(new DiscordUser(event.getAuthor().getName(), event.getAuthor().getId(), event.getAuthor().getEffectiveAvatarUrl()));
 
 					try
 					{
+						unitOfWork.getGames().add(game);
 						unitOfWork.close();
 					}
 					catch (Exception e)
@@ -78,18 +82,35 @@ public class DiscordBot extends ListenerAdapter
 				});
 	}
 
-	public void updateGame(Game game)
+	public synchronized void updateGame(Game game)
 	{
 		EmbedBuilder embedBuilder = new EmbedBuilder();
-		MessageBuilder builder = new MessageBuilder().setContent("**@" + game.getHost().getName() + "'s game**");
+		MessageBuilder builder = new MessageBuilder();
+		
+		builder.setContent(" ");
+		
+		embedBuilder.setAuthor(game.getHost().getName(), null, game.getHost().getPfpUrl());
 
 		handleMsgGameState(game, builder, embedBuilder);
 		handleMsgGameInfo(game, builder, embedBuilder);
+		handleMsgPlayers(game, builder, embedBuilder);
 
 		builder.setEmbed(embedBuilder.build());
 		jda.getTextChannelById(game.getDiscordChannelId())
 				.editMessageById(game.getDiscordMessageId(), builder.build())
 				.queue();
+	}
+
+	private void handleMsgPlayers(Game game, MessageBuilder message, EmbedBuilder embed)
+	{
+		for(Player player : game.getPlayers())
+		{
+			String discordName = "Not linked";
+			
+			embed.addField(player.getAuName(), discordName, true);
+
+		}
+		
 	}
 
 	private void handleMsgGameInfo(Game game, MessageBuilder message, EmbedBuilder embed)
@@ -105,6 +126,7 @@ public class DiscordBot extends ListenerAdapter
 
 		embed.addField("Room Code", roomCode, true);
 		embed.addField("Region", region, true);
+		embed.addField("Players", game.getPlayers().size() + "", true);
 	}
 
 	private void handleMsgGameState(Game game, MessageBuilder message, EmbedBuilder embed)

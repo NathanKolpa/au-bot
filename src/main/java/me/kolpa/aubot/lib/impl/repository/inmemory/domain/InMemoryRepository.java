@@ -12,12 +12,17 @@ public abstract class InMemoryRepository<T> implements Repository<T>
 	@Override
 	public List<T> getAll()
 	{
-		return values;
+		return new ArrayList<>(values);
 	}
 
 	@Override
 	public void add(T entity)
 	{
 		values.add(entity);
+	}
+	
+	public List<T> getValues()
+	{
+		return values;
 	}
 }

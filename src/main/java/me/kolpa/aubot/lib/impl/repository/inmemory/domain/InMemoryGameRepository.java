@@ -10,7 +10,7 @@ public class InMemoryGameRepository extends InMemoryRepository<Game> implements 
 {
 	private int autoIncrement = 1;
 	private Map<String, Game> captureCodeMap = new HashMap<>();
-	
+
 	@Override
 	public void add(Game entity)
 	{
@@ -19,10 +19,22 @@ public class InMemoryGameRepository extends InMemoryRepository<Game> implements 
 		entity.setGameId(autoIncrement);
 		autoIncrement++;
 	}
-	
+
 	@Override
 	public Game getByConnectCode(String code)
 	{
 		return captureCodeMap.get(code);
+	}
+
+	@Override
+	public void deleteGamesWithDiscordId(String discordId)
+	{
+		getValues().removeIf(game ->
+		{
+			if(game.getHost() != null)
+				return game.getHost().getId().equals(discordId);
+			
+			return false;
+		});
 	}
 }
